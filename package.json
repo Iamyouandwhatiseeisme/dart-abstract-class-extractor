@@ -16,10 +16,25 @@
   "contributes": {
     "commands": [
       {
-      "command": "flutter-clean-code.convertToAbstract",
-      "title": "Convert to Abstract Class"
+        "command": "flutter-clean-code.convertToAbstract",
+        "title": "Convert to Abstract Class"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Flutter Clean Code",
+      "properties": {
+        "flutterCleanCode.interfacePrefix": {
+          "type": "string",
+          "default": "I",
+          "description": "Prefix for interface class names (e.g., 'I' generates 'IUserService')"
+        },
+        "flutterCleanCode.implementationSuffix": {
+          "type": "string",
+          "default": "Impl",
+          "description": "Suffix for implementation class names (e.g., 'Impl' generates 'UserServiceImpl')"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

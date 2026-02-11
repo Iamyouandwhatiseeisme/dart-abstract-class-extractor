@@ -32,9 +32,15 @@ export class DartClassParser {
     /**
      * Converts a Dart class to interface and implementation
      * @param dartCode The Dart code containing the class to convert
+     * @param interfacePrefix Prefix for the interface name (default: "I")
+     * @param implementationSuffix Suffix for the implementation class name (default: "Impl")
      * @returns ConversionResult or null if no valid class found
      */
-    static convertToAbstractClass(dartCode: string): ConversionResult | null {
+    static convertToAbstractClass(
+        dartCode: string,
+        interfacePrefix: string = 'I',
+        implementationSuffix: string = 'Impl'
+    ): ConversionResult | null {
         // Remove comments
         const codeWithoutComments = dartCode
             .replace(/\/\/.*$/gm, '')
@@ -55,12 +61,13 @@ export class DartClassParser {
         const methods = this.extractMethods(classBody, className);
         const properties = this.extractProperties(classBody);
         
-        const interfaceName = `I${className}`;
+        const interfaceName = `${interfacePrefix}${className}`;
+        const implementationName = `${className}${implementationSuffix}`;
         
         const interfaceClass = this.buildInterface(interfaceName, properties, methods);
         
         const concreteClass = this.buildConcreteClass(
-            className,
+            implementationName,
             interfaceName,
             properties,
             methods
@@ -192,13 +199,12 @@ export class DartClassParser {
      * Builds the concrete class implementation
      */
     private static buildConcreteClass(
-        className: string,
+        implementationName: string,
         interfaceName: string,
         properties: PropertyInfo[],
         methods: MethodInfo[]
     ): string {
-        const concreteClassName = `${className}Impl`;
-        let concreteClass = `class ${concreteClassName} implements ${interfaceName} {\n`;
+        let concreteClass = `class ${implementationName} implements ${interfaceName} {\n`;
         
         // Add properties with @override
         if (properties.length > 0) {
@@ -215,7 +221,7 @@ export class DartClassParser {
             const constructorParams = properties
                 .map(p => `required this.${p.name}`)
                 .join(', ');
-            concreteClass += `  ${concreteClassName}({${constructorParams}});\n`;
+            concreteClass += `  ${implementationName}({${constructorParams}});\n`;
             if (methods.length > 0) {
                 concreteClass += '\n';
             }

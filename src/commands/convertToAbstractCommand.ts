@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DartClassParser } from '../utils/dartClassParser';
+import { ExtensionConfig } from '../utils/extensionConfig';
 
 /**
  * Command to convert a Dart class to interface and implementation
@@ -25,7 +26,15 @@ export async function convertToAbstractCommand(): Promise<void> {
     const textToProcess = selectedText || editor.document.getText();
     
     try {
-        const result = DartClassParser.convertToAbstractClass(textToProcess);
+        // Get user configuration
+        const interfacePrefix = ExtensionConfig.getInterfacePrefix();
+        const implementationSuffix = ExtensionConfig.getImplementationSuffix();
+        
+        const result = DartClassParser.convertToAbstractClass(
+            textToProcess,
+            interfacePrefix,
+            implementationSuffix
+        );
         
         if (!result) {
             vscode.window.showErrorMessage('No valid Dart class found!');
