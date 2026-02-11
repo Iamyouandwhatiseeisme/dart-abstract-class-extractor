@@ -1,26 +1,184 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+    console.log('Flutter clean code extension is now active!');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "flutter-clean-code" is now active!');
+    let disposable = vscode.commands.registerCommand('flutter-clean-code.convertToAbstract', async () => {
+        const editor = vscode.window.activeTextEditor;
+        
+        if (!editor) {
+            vscode.window.showErrorMessage('No active editor found!');
+            return;
+        }
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('flutter-clean-code.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from Flutter clean code!');
-	});
+        // Check if it's a Dart file
+        if (editor.document.languageId !== 'dart') {
+            vscode.window.showErrorMessage('This command only works with Dart files!');
+            return;
+        }
 
-	context.subscriptions.push(disposable);
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
+        
+        // If nothing selected, try to find the class at cursor position
+        const textToProcess = selectedText || editor.document.getText();
+        
+        try {
+            const abstractClass = convertToAbstractClass(textToProcess);
+            
+            if (!abstractClass) {
+                vscode.window.showErrorMessage('No valid Dart class found!');
+                return;
+            }
+
+            // Ask user what to do with the result
+            const action = await vscode.window.showQuickPick(
+                ['Replace current class', 'Insert below', 'Copy to clipboard'],
+                { placeHolder: 'What would you like to do with the abstract class?' }
+            );
+
+            if (!action) return;
+
+            switch (action) {
+                case 'Replace current class':
+                    await editor.edit(editBuilder => {
+                        if (selectedText) {
+                            editBuilder.replace(selection, abstractClass);
+                        } else {
+                            // Replace entire document
+                            const fullRange = new vscode.Range(
+                                editor.document.positionAt(0),
+                                editor.document.positionAt(editor.document.getText().length)
+                            );
+                            editBuilder.replace(fullRange, abstractClass);
+                        }
+                    });
+                    break;
+                    
+                case 'Insert below':
+                    const endPosition = selection.isEmpty ? 
+                        editor.document.positionAt(editor.document.getText().length) : 
+                        selection.end;
+                    await editor.edit(editBuilder => {
+                        editBuilder.insert(endPosition, '\n\n' + abstractClass);
+                    });
+                    break;
+                    
+                case 'Copy to clipboard':
+                    await vscode.env.clipboard.writeText(abstractClass);
+                    vscode.window.showInformationMessage('Abstract class copied to clipboard!');
+                    break;
+            }
+            
+            vscode.window.showInformationMessage('Abstract class created successfully!');
+            
+        } catch (error) {
+            vscode.window.showErrorMessage(`Error: ${error}`);
+        }
+    });
+
+    context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
+function convertToAbstractClass(dartCode: string): string | null {
+    // Remove comments
+    const codeWithoutComments = dartCode.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    
+    // Match class declaration
+    const classMatch = codeWithoutComments.match(/class\s+(\w+)(\s+extends\s+\w+)?(\s+implements\s+[\w\s,]+)?(\s+with\s+[\w\s,]+)?\s*\{/);
+    
+    if (!classMatch) {
+        return null;
+    }
+
+    const className = classMatch[1];
+    const extendsClause = classMatch[2] || '';
+    const implementsClause = classMatch[3] || '';
+    const withClause = classMatch[4] || '';
+    
+    // Extract class body
+    const classBodyStart = dartCode.indexOf('{', classMatch.index!);
+    let braceCount = 1;
+    let classBodyEnd = classBodyStart + 1;
+    
+    for (let i = classBodyStart + 1; i < dartCode.length; i++) {
+        if (dartCode[i] === '{') braceCount++;
+        if (dartCode[i] === '}') braceCount--;
+        if (braceCount === 0) {
+            classBodyEnd = i;
+            break;
+        }
+    }
+    
+    const classBody = dartCode.substring(classBodyStart + 1, classBodyEnd);
+    
+    // Extract methods (public methods only, excluding constructors)
+    const methodRegex = /^\s*(?!\/\/|\/\*|abstract)(\w+(?:<[^>]+>)?)\s+(\w+)\s*\([^)]*\)\s*(?:async\s*)?(?:=>|{)/gm;
+    const methods: string[] = [];
+    let match;
+    
+    while ((match = methodRegex.exec(classBody)) !== null) {
+        const returnType = match[1];
+        const methodName = match[2];
+        
+        // Skip constructors
+        if (methodName === className) continue;
+        
+        // Skip private methods (starting with _)
+        if (methodName.startsWith('_')) continue;
+        
+        // Extract full method signature
+        const methodStart = match.index;
+        const signatureMatch = classBody.substring(methodStart).match(/^[^{;=>]*/);
+        
+        if (signatureMatch) {
+            let signature = signatureMatch[0].trim();
+            // Remove 'async' keyword if present
+            signature = signature.replace(/\s+async\s*$/, '');
+            methods.push(`  ${signature};`);
+        }
+    }
+    
+    // Extract properties (fields)
+    const propertyRegex = /^\s*(?:final|const)?\s*(\w+(?:<[^>]+>)?)\s+(\w+)\s*(?:=|;)/gm;
+    const properties: string[] = [];
+    
+    while ((match = propertyRegex.exec(classBody)) !== null) {
+        const type = match[1];
+        const propName = match[2];
+        
+        // Skip private properties
+        if (propName.startsWith('_')) continue;
+        
+        // Skip if it's inside a method
+        const beforeMatch = classBody.substring(0, match.index);
+        const openBraces = (beforeMatch.match(/{/g) || []).length;
+        const closeBraces = (beforeMatch.match(/}/g) || []).length;
+        
+        if (openBraces > closeBraces) continue;
+        
+        properties.push(`  ${type} get ${propName};`);
+    }
+    
+    // Build abstract class
+    let abstractClass = `abstract class ${className}${extendsClause}${implementsClause}${withClause} {\n`;
+    
+    // Add properties as abstract getters
+    if (properties.length > 0) {
+        abstractClass += properties.join('\n') + '\n';
+        if (methods.length > 0) {
+            abstractClass += '\n';
+        }
+    }
+    
+    // Add abstract methods
+    if (methods.length > 0) {
+        abstractClass += methods.join('\n') + '\n';
+    }
+    
+    abstractClass += '}';
+    
+    return abstractClass;
+}
+
 export function deactivate() {}
