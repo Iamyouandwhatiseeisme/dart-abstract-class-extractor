@@ -9,6 +9,9 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onLanguage:dart"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [

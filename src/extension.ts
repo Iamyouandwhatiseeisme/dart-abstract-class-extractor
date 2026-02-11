@@ -3,81 +3,138 @@ import * as vscode from 'vscode';
 export function activate(context: vscode.ExtensionContext) {
     console.log('Flutter clean code extension is now active!');
 
+    // Register the command
     let disposable = vscode.commands.registerCommand('flutter-clean-code.convertToAbstract', async () => {
-        const editor = vscode.window.activeTextEditor;
-        
-        if (!editor) {
-            vscode.window.showErrorMessage('No active editor found!');
-            return;
-        }
-
-        // Check if it's a Dart file
-        if (editor.document.languageId !== 'dart') {
-            vscode.window.showErrorMessage('This command only works with Dart files!');
-            return;
-        }
-
-        const selection = editor.selection;
-        const selectedText = editor.document.getText(selection);
-        
-        // If nothing selected, try to find the class at cursor position
-        const textToProcess = selectedText || editor.document.getText();
-        
-        try {
-            const abstractClass = convertToAbstractClass(textToProcess);
-            
-            if (!abstractClass) {
-                vscode.window.showErrorMessage('No valid Dart class found!');
-                return;
-            }
-
-            // Ask user what to do with the result
-            const action = await vscode.window.showQuickPick(
-                ['Replace current class', 'Insert below', 'Copy to clipboard'],
-                { placeHolder: 'What would you like to do with the abstract class?' }
-            );
-
-            if (!action) return;
-
-            switch (action) {
-                case 'Replace current class':
-                    await editor.edit(editBuilder => {
-                        if (selectedText) {
-                            editBuilder.replace(selection, abstractClass);
-                        } else {
-                            // Replace entire document
-                            const fullRange = new vscode.Range(
-                                editor.document.positionAt(0),
-                                editor.document.positionAt(editor.document.getText().length)
-                            );
-                            editBuilder.replace(fullRange, abstractClass);
-                        }
-                    });
-                    break;
-                    
-                case 'Insert below':
-                    const endPosition = selection.isEmpty ? 
-                        editor.document.positionAt(editor.document.getText().length) : 
-                        selection.end;
-                    await editor.edit(editBuilder => {
-                        editBuilder.insert(endPosition, '\n\n' + abstractClass);
-                    });
-                    break;
-                    
-                case 'Copy to clipboard':
-                    await vscode.env.clipboard.writeText(abstractClass);
-                    vscode.window.showInformationMessage('Abstract class copied to clipboard!');
-                    break;
-            }
-            
-            vscode.window.showInformationMessage('Abstract class created successfully!');
-            
-        } catch (error) {
-            vscode.window.showErrorMessage(`Error: ${error}`);
-        }
+        await convertToAbstractCommand();
     });
 
-    context.subscriptions.push(disposable);
+    // Register the code action provider for Dart files
+   const provider = vscode.languages.registerCodeActionsProvider(
+    'dart',  // Simplified selector
+    new DartAbstractClassProvider(),
+    {
+        providedCodeActionKinds: [
+            vscode.CodeActionKind.Refactor,
+            vscode.CodeActionKind.RefactorRewrite,
+            vscode.CodeActionKind.QuickFix
+        ]
+    }
+);
+
+    context.subscriptions.push(disposable, provider);
+}
+
+class DartAbstractClassProvider implements vscode.CodeActionProvider {
+    provideCodeActions(
+        document: vscode.TextDocument,
+        range: vscode.Range | vscode.Selection,
+        context: vscode.CodeActionContext,
+        token: vscode.CancellationToken
+    ): vscode.CodeAction[] | undefined {
+        
+        console.log('provideCodeActions called!');
+        console.log('Language:', document.languageId);
+        console.log('Has class:', document.getText().includes('class '));
+        
+        // Check if cursor is inside a class
+        const documentText = document.getText();
+        
+        // Simple check: is there a class in the document?
+        if (!documentText.includes('class ')) {
+            console.log('No class found, returning undefined');
+            return;
+        }
+
+        console.log('Creating code action');
+        
+        // Create the code action
+        const action = new vscode.CodeAction(
+            'Convert to Abstract Class',
+            vscode.CodeActionKind.RefactorRewrite
+        );
+        
+        action.command = {
+            command: 'flutter-clean-code.convertToAbstract',
+            title: 'Convert to Abstract Class'
+        };
+
+        console.log('Returning code action');
+        return [action];
+    }
+}
+
+async function convertToAbstractCommand() {
+    const editor = vscode.window.activeTextEditor;
+    
+    if (!editor) {
+        vscode.window.showErrorMessage('No active editor found!');
+        return;
+    }
+
+    // Check if it's a Dart file
+    if (editor.document.languageId !== 'dart') {
+        vscode.window.showErrorMessage('This command only works with Dart files!');
+        return;
+    }
+
+    const selection = editor.selection;
+    const selectedText = editor.document.getText(selection);
+    
+    // If nothing selected, try to find the class at cursor position
+    const textToProcess = selectedText || editor.document.getText();
+    
+    try {
+        const abstractClass = convertToAbstractClass(textToProcess);
+        
+        if (!abstractClass) {
+            vscode.window.showErrorMessage('No valid Dart class found!');
+            return;
+        }
+
+        // Ask user what to do with the result
+        const action = await vscode.window.showQuickPick(
+            ['Replace current class', 'Insert below', 'Copy to clipboard'],
+            { placeHolder: 'What would you like to do with the abstract class?' }
+        );
+
+        if (!action) return;
+
+        switch (action) {
+            case 'Replace current class':
+                await editor.edit(editBuilder => {
+                    if (selectedText) {
+                        editBuilder.replace(selection, abstractClass);
+                    } else {
+                        // Replace entire document
+                        const fullRange = new vscode.Range(
+                            editor.document.positionAt(0),
+                            editor.document.positionAt(editor.document.getText().length)
+                        );
+                        editBuilder.replace(fullRange, abstractClass);
+                    }
+                });
+                break;
+                
+            case 'Insert below':
+                const endPosition = selection.isEmpty ? 
+                    editor.document.positionAt(editor.document.getText().length) : 
+                    selection.end;
+                await editor.edit(editBuilder => {
+                    editBuilder.insert(endPosition, '\n\n' + abstractClass);
+                });
+                break;
+                
+            case 'Copy to clipboard':
+                await vscode.env.clipboard.writeText(abstractClass);
+                vscode.window.showInformationMessage('Abstract class copied to clipboard!');
+                break;
+        }
+        
+        vscode.window.showInformationMessage('Abstract class created successfully!');
+        
+    } catch (error) {
+        vscode.window.showErrorMessage(`Error: ${error}`);
+    }
 }
 
 function convertToAbstractClass(dartCode: string): string | null {
