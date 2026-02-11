@@ -84,17 +84,20 @@ async function convertToAbstractCommand() {
     const textToProcess = selectedText || editor.document.getText();
     
     try {
-        const abstractClass = convertToAbstractClass(textToProcess);
+        const result = convertToAbstractClass(textToProcess);
         
-        if (!abstractClass) {
+        if (!result) {
             vscode.window.showErrorMessage('No valid Dart class found!');
             return;
         }
 
+        const { abstractClass, interfaceClass, concreteClass } = result;
+        const fullOutput = `${abstractClass}\n\n${interfaceClass}\n\n${concreteClass}`;
+
         // Ask user what to do with the result
         const action = await vscode.window.showQuickPick(
             ['Replace current class', 'Insert below', 'Copy to clipboard'],
-            { placeHolder: 'What would you like to do with the abstract class?' }
+            { placeHolder: 'What would you like to do with the generated code?' }
         );
 
         if (!action) return;
@@ -103,14 +106,14 @@ async function convertToAbstractCommand() {
             case 'Replace current class':
                 await editor.edit(editBuilder => {
                     if (selectedText) {
-                        editBuilder.replace(selection, abstractClass);
+                        editBuilder.replace(selection, fullOutput);
                     } else {
                         // Replace entire document
                         const fullRange = new vscode.Range(
                             editor.document.positionAt(0),
                             editor.document.positionAt(editor.document.getText().length)
                         );
-                        editBuilder.replace(fullRange, abstractClass);
+                        editBuilder.replace(fullRange, fullOutput);
                     }
                 });
                 break;
@@ -120,24 +123,24 @@ async function convertToAbstractCommand() {
                     editor.document.positionAt(editor.document.getText().length) : 
                     selection.end;
                 await editor.edit(editBuilder => {
-                    editBuilder.insert(endPosition, '\n\n' + abstractClass);
+                    editBuilder.insert(endPosition, '\n\n' + fullOutput);
                 });
                 break;
                 
             case 'Copy to clipboard':
-                await vscode.env.clipboard.writeText(abstractClass);
-                vscode.window.showInformationMessage('Abstract class copied to clipboard!');
+                await vscode.env.clipboard.writeText(fullOutput);
+                vscode.window.showInformationMessage('Code copied to clipboard!');
                 break;
         }
         
-        vscode.window.showInformationMessage('Abstract class created successfully!');
+        vscode.window.showInformationMessage('Abstract class, interface, and implementation created successfully!');
         
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error}`);
     }
 }
 
-function convertToAbstractClass(dartCode: string): string | null {
+function convertToAbstractClass(dartCode: string): { abstractClass: string, interfaceClass: string, concreteClass: string } | null {
     // Remove comments
     const codeWithoutComments = dartCode.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
     
@@ -171,7 +174,7 @@ function convertToAbstractClass(dartCode: string): string | null {
     
     // Extract methods (public methods only, excluding constructors)
     const methodRegex = /^\s*(?!\/\/|\/\*|abstract)(\w+(?:<[^>]+>)?)\s+(\w+)\s*\([^)]*\)\s*(?:async\s*)?(?:=>|{)/gm;
-    const methods: string[] = [];
+    const methods: Array<{ signature: string, returnType: string, name: string, params: string }> = [];
     let match;
     
     while ((match = methodRegex.exec(classBody)) !== null) {
@@ -192,13 +195,23 @@ function convertToAbstractClass(dartCode: string): string | null {
             let signature = signatureMatch[0].trim();
             // Remove 'async' keyword if present
             signature = signature.replace(/\s+async\s*$/, '');
-            methods.push(`  ${signature};`);
+            
+            // Extract parameters
+            const paramsMatch = signature.match(/\(([^)]*)\)/);
+            const params = paramsMatch ? paramsMatch[1] : '';
+            
+            methods.push({ 
+                signature, 
+                returnType, 
+                name: methodName,
+                params 
+            });
         }
     }
     
     // Extract properties (fields)
     const propertyRegex = /^\s*(?:final|const)?\s*(\w+(?:<[^>]+>)?)\s+(\w+)\s*(?:=|;)/gm;
-    const properties: string[] = [];
+    const properties: Array<{ type: string, name: string }> = [];
     
     while ((match = propertyRegex.exec(classBody)) !== null) {
         const type = match[1];
@@ -214,15 +227,17 @@ function convertToAbstractClass(dartCode: string): string | null {
         
         if (openBraces > closeBraces) continue;
         
-        properties.push(`  ${type} get ${propName};`);
+        properties.push({ type, name: propName });
     }
+    
+    const interfaceName = `I${className}`;
     
     // Build abstract class
     let abstractClass = `abstract class ${className}${extendsClause}${implementsClause}${withClause} {\n`;
     
     // Add properties as abstract getters
     if (properties.length > 0) {
-        abstractClass += properties.join('\n') + '\n';
+        abstractClass += properties.map(p => `  ${p.type} get ${p.name};`).join('\n') + '\n';
         if (methods.length > 0) {
             abstractClass += '\n';
         }
@@ -230,12 +245,60 @@ function convertToAbstractClass(dartCode: string): string | null {
     
     // Add abstract methods
     if (methods.length > 0) {
-        abstractClass += methods.join('\n') + '\n';
+        abstractClass += methods.map(m => `  ${m.signature};`).join('\n') + '\n';
     }
     
     abstractClass += '}';
     
-    return abstractClass;
+    // Build interface
+    let interfaceClass = `abstract class ${interfaceName} {\n`;
+    
+    // Add properties as abstract getters in interface
+    if (properties.length > 0) {
+        interfaceClass += properties.map(p => `  ${p.type} get ${p.name};`).join('\n') + '\n';
+        if (methods.length > 0) {
+            interfaceClass += '\n';
+        }
+    }
+    
+    // Add abstract methods in interface
+    if (methods.length > 0) {
+        interfaceClass += methods.map(m => `  ${m.signature};`).join('\n') + '\n';
+    }
+    
+    interfaceClass += '}';
+    
+    // Build concrete class with implementation
+    const concreteClassName = `${className}Impl`;
+    let concreteClass = `class ${concreteClassName} implements ${interfaceName} {\n`;
+    
+    // Add properties with @override
+    if (properties.length > 0) {
+        concreteClass += properties.map(p => `  @override\n  final ${p.type} ${p.name};`).join('\n\n') + '\n';
+        if (methods.length > 0) {
+            concreteClass += '\n';
+        }
+    }
+    
+    // Add constructor if there are properties
+    if (properties.length > 0) {
+        const constructorParams = properties.map(p => `required this.${p.name}`).join(', ');
+        concreteClass += `  ${concreteClassName}({${constructorParams}});\n`;
+        if (methods.length > 0) {
+            concreteClass += '\n';
+        }
+    }
+    
+    // Add methods with @override
+    if (methods.length > 0) {
+        concreteClass += methods.map(m => {
+            return `  @override\n  ${m.signature} {\n    // TODO: implement ${m.name}\n    throw UnimplementedError();\n  }`;
+        }).join('\n\n') + '\n';
+    }
+    
+    concreteClass += '}';
+    
+    return { abstractClass, interfaceClass, concreteClass };
 }
 
 export function deactivate() {}
