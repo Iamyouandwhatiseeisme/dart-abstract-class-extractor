@@ -107,39 +107,22 @@ This would generate `AbstractUserRepository` and `UserRepositoryService` instead
 
 ## Known Issues
 
-- Dart classes using complex generics in method signatures may not parse correctly in all cases
 - Mixins and `extends` relationships are not carried over to the generated classes — the output focuses on the interface contract only
 
 ## Release Notes
 
-### 0.0.1
+### 0.4.0
 
-Initial release of Dart Abstract Class Extractor:
-
-- Convert concrete Dart classes to abstract interface + implementation
-- Preserves original method bodies in the generated implementation
-- Supports both block-body and arrow-function methods
-- Excludes private members from the interface automatically
-
-### 0.2.0
-
-0.2.0
-
-Major update — migrated parsing from TypeScript + regex to Dart Analyzer AST:
-
-- Convert Dart classes to abstract interface + implementation using Dart Analyzer
-- Generates getters for fields and computed properties in abstract classes
-- Implementation classes include @override annotations and constructor initialization for fields
-- Fully supports async methods, streams, and nested generics
-- More accurate and stable parsing for complex Dart classes
+Fixed Windows compatibility — `ast_extractor.exe` previously failed on some Windows machines due to a binary architecture mismatch. The extension now bundles separate platform-specific binaries for Windows and macOS, and automatically selects the correct one at runtime. No changes to functionality.
 
 ### 0.3.0
 
-0.3.0
+Improved distribution — switched to a compiled standalone executable for AST extraction. Users no longer need the Dart SDK installed to run the extension. `ast_extractor` is now bundled directly with the extension and maintains full support for fields, getters, methods, constructors, async/stream functions, and nested generics.
 
-Improved distribution — switched to compiled executable for AST extraction:
+### 0.2.0
 
-- Users no longer need Dart SDK installed to run the extension
-- ast_extractor now runs as a standalone executable bundled with the extension
-- Maintains full support for fields, getters, methods, constructors, async/stream functions, and nested generics
-- Ensures stable cross-platform usage on Windows, Mac, and Linux
+Major update — migrated parsing from TypeScript + regex to the Dart Analyzer AST for significantly more accurate and stable results. Adds getter generation for fields and computed properties, `@override` annotations and constructor initialization in implementation classes, and full support for async methods, streams, and nested generics.
+
+### 0.1.0
+
+Initial release — convert concrete Dart classes to an abstract interface and implementation, preserving method bodies, supporting block-body and arrow-function methods, and automatically excluding private members.
