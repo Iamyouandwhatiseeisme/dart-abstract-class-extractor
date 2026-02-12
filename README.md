@@ -1,71 +1,102 @@
-# flutter-clean-code README
+# Dart Abstract Class Extractor
 
-This is the README for your extension "flutter-clean-code". After writing up a brief description, we recommend including the following sections.
+A VS Code extension that automatically converts Dart concrete classes into an abstract interface and a corresponding implementation class — helping you write cleaner, more maintainable Flutter and Dart code following clean architecture principles.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Convert Any Dart Class in Seconds
 
-For example if there is an image subfolder under your extension project workspace:
+Select any Dart class, run the command, and the extension generates:
 
-\!\[feature X\]\(images/feature-x.png\)
+- An **abstract interface class** (`IClassName`) with getters for all public properties and abstract method signatures
+- A **concrete implementation class** (`ClassNameImpl`) that implements the interface, preserving all original method bodies
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+**How to use:**
+
+1. Open a `.dart` file in VS Code
+2. Place your cursor inside the class you want to convert
+3. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+4. Run **`Dart: Convert to Abstract Class`**
+5. The generated interface and implementation are inserted directly into your editor
+
+**Example — input:**
+
+```dart
+class UserRepository {
+  final String baseUrl;
+
+  UserRepository({required this.baseUrl});
+
+  Future<User> getUser(String id) async {
+    final response = await http.get('$baseUrl/users/$id');
+    return User.fromJson(response.body);
+  }
+
+  Future<void> deleteUser(String id) async {
+    await http.delete('$baseUrl/users/$id');
+  }
+}
+```
+
+**Example — output:**
+
+```dart
+abstract class IUserRepository {
+  String get baseUrl;
+
+  Future<User> getUser(String id);
+  Future<void> deleteUser(String id);
+}
+
+class UserRepositoryImpl implements IUserRepository {
+  @override
+  final String baseUrl;
+
+  UserRepositoryImpl({required this.baseUrl});
+
+  @override
+  Future<User> getUser(String id) async {
+    final response = await http.get('$baseUrl/users/$id');
+    return User.fromJson(response.body);
+  }
+
+  @override
+  Future<void> deleteUser(String id) async {
+    await http.delete('$baseUrl/users/$id');
+  }
+}
+```
+
+### What Gets Extracted
+
+- ✅ Public properties → abstract getters in the interface
+- ✅ Public methods → abstract signatures in the interface
+- ✅ Original method bodies preserved in the implementation
+- ✅ `@override` annotations added automatically
+- ✅ Constructor generated from properties
+- ✅ Private members (`_`) are correctly excluded from the interface
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- VS Code `^1.109.0`
+- A Dart or Flutter project (the extension activates automatically on `.dart` files)
+- No additional dependencies or SDK setup required — the extension works purely with source text
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+This extension does not contribute any configurable settings at this time.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- Dart classes using complex generics in method signatures may not parse correctly in all cases
+- Mixins and `extends` relationships are not carried over to the generated classes — the output focuses on the interface contract only
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release of Dart Abstract Class Extractor:
+- Convert concrete Dart classes to abstract interface + implementation
+- Preserves original method bodies in the generated implementation
+- Supports both block-body and arrow-function methods
+- Excludes private members from the interface automatically
