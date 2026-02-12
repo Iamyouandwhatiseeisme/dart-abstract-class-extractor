@@ -25,7 +25,12 @@ export class DartClassParser {
     fs.writeFileSync(tmpFile, dartSource, "utf8");
 
     const extensionRoot = path.resolve(__dirname, "../");
-    const extractorPath = path.join(extensionRoot, "ast_extractor.exe");
+      const platform = os.platform();
+
+      const binaryName = platform === 'win32' 
+        ? 'ast_extractor_windows.exe' 
+        : 'ast_extractor_macos';
+    const extractorPath = path.join(extensionRoot, binaryName);
 
     // 2. Call Dart AST extractor
     let output: string;
@@ -114,7 +119,7 @@ ${abstractLines.join("\n")}
 
     const concreteClass = `
 class ${implName} implements ${interfaceName} {
-${implLines.join("\n\n")}${constructor}
+${constructor}\n\n${implLines.join("\n\n")}
 }
 `.trim();
 
