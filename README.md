@@ -84,7 +84,26 @@ class UserRepositoryImpl implements IUserRepository {
 
 ## Extension Settings
 
-This extension does not contribute any configurable settings at this time.
+This extension contributes the following settings, accessible via **File → Preferences → Settings** and searching for `Dart Abstract Class Extractor`:
+
+| Setting | Default | Description |
+|---|---|---|
+| `dartAbstractClassExtractor.interfacePrefix` | `"I"` | Prefix applied to the generated interface name. For example `"I"` produces `IUserService`. |
+| `dartAbstractClassExtractor.implementationSuffix` | `"Impl"` | Suffix applied to the generated implementation name. For example `"Impl"` produces `UserServiceImpl`. |
+
+**Example — custom naming:**
+
+If you prefer a different convention, such as `Abstract` prefix and `Service` suffix:
+
+```json
+// settings.json
+{
+  "dartAbstractClassExtractor.interfacePrefix": "Abstract",
+  "dartAbstractClassExtractor.implementationSuffix": "Service"
+}
+```
+
+This would generate `AbstractUserRepository` and `UserRepositoryService` instead of the defaults.
 
 ## Known Issues
 
