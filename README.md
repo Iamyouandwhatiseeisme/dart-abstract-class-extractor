@@ -86,9 +86,9 @@ class UserRepositoryImpl implements IUserRepository {
 
 This extension contributes the following settings, accessible via **File → Preferences → Settings** and searching for `Dart Abstract Class Extractor`:
 
-| Setting | Default | Description |
-|---|---|---|
-| `dartAbstractClassExtractor.interfacePrefix` | `"I"` | Prefix applied to the generated interface name. For example `"I"` produces `IUserService`. |
+| Setting                                           | Default  | Description                                                                                           |
+| ------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `dartAbstractClassExtractor.interfacePrefix`      | `"I"`    | Prefix applied to the generated interface name. For example `"I"` produces `IUserService`.            |
 | `dartAbstractClassExtractor.implementationSuffix` | `"Impl"` | Suffix applied to the generated implementation name. For example `"Impl"` produces `UserServiceImpl`. |
 
 **Example — custom naming:**
@@ -115,7 +115,31 @@ This would generate `AbstractUserRepository` and `UserRepositoryService` instead
 ### 0.0.1
 
 Initial release of Dart Abstract Class Extractor:
+
 - Convert concrete Dart classes to abstract interface + implementation
 - Preserves original method bodies in the generated implementation
 - Supports both block-body and arrow-function methods
 - Excludes private members from the interface automatically
+
+### 0.2.0
+
+0.2.0
+
+Major update — migrated parsing from TypeScript + regex to Dart Analyzer AST:
+
+- Convert Dart classes to abstract interface + implementation using Dart Analyzer
+- Generates getters for fields and computed properties in abstract classes
+- Implementation classes include @override annotations and constructor initialization for fields
+- Fully supports async methods, streams, and nested generics
+- More accurate and stable parsing for complex Dart classes
+
+### 0.3.0
+
+0.3.0
+
+Improved distribution — switched to compiled executable for AST extraction:
+
+- Users no longer need Dart SDK installed to run the extension
+- ast_extractor now runs as a standalone executable bundled with the extension
+- Maintains full support for fields, getters, methods, constructors, async/stream functions, and nested generics
+- Ensures stable cross-platform usage on Windows, Mac, and Linux
