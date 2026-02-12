@@ -13,11 +13,21 @@ Select any Dart class, run the command, and the extension generates:
 
 **How to use:**
 
+**Option A — Quick Fix:**
+
+1. Open a `.dart` file in VS Code
+2. Highlight the class name or anywhere inside the class
+3. Press `Ctrl+.` (`Cmd+.` on macOS) to open the Quick Fix menu
+4. Select **`Convert to Abstract Class`**
+
+**Option B — Command Palette:**
+
 1. Open a `.dart` file in VS Code
 2. Place your cursor inside the class you want to convert
 3. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
 4. Run **`Dart: Convert to Abstract Class`**
 5. The generated interface and implementation are inserted directly into your editor
+
 
 **Example — input:**
 
