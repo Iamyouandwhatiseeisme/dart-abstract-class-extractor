@@ -5,7 +5,7 @@ import { DartAbstractClassProvider } from "./providers/dartAbstractClassProvider
 export function activate(context: vscode.ExtensionContext) {
   // Register the command
   const disposable = vscode.commands.registerCommand(
-    "flutter-clean-code.convertToAbstract",
+    "dart-abstract-class-extractor.convertToAbstract",
     convertToAbstractCommand,
   );
 

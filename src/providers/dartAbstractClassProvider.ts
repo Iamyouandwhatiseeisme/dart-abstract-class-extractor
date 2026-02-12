@@ -24,7 +24,7 @@ export class DartAbstractClassProvider implements vscode.CodeActionProvider {
     );
 
     action.command = {
-      command: "flutter-clean-code.convertToAbstract",
+      command: "dart-abstract-class-extractor.convertToAbstract",
       title: "Convert to Abstract Class",
     };
 
