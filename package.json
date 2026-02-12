@@ -1,12 +1,27 @@
 {
-  "name": "flutter-clean-code",
-  "displayName": "Flutter clean code",
-  "description": "This extension lets the user make an abstract class from dart class",
+  "name": "dart-abstract-class-extractor",
+  "displayName": "Dart Abstract Class Extractor",
+  "description": "Automatically converts Dart concrete classes into an abstract interface and a corresponding implementation class, following clean architecture principles.",
   "version": "0.0.1",
+  "publisher": "SandroAbashidze",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SandroAbashidze/dart-abstract-class-extractor"
+  },
+  "icon": "images/icon.png",
+  "keywords": [
+    "dart",
+    "flutter",
+    "abstract",
+    "interface",
+    "clean architecture",
+    "code generation"
+  ],
   "engines": {
     "vscode": "^1.109.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
   "activationEvents": [
@@ -16,19 +31,19 @@
   "contributes": {
     "commands": [
       {
-        "command": "flutter-clean-code.convertToAbstract",
-        "title": "Convert to Abstract Class"
+        "command": "dart-abstract-class-extractor.convertToAbstract",
+        "title": "Dart: Convert to Abstract Class"
       }
     ],
     "configuration": {
-      "title": "Flutter Clean Code",
+      "title": "Dart Abstract Class Extractor Settings",
       "properties": {
-        "flutterCleanCode.interfacePrefix": {
+        "dartAbstractClassExtractor.interfacePrefix": {
           "type": "string",
           "default": "I",
           "description": "Prefix for interface class names (e.g., 'I' generates 'IUserService')"
         },
-        "flutterCleanCode.implementationSuffix": {
+        "dartAbstractClassExtractor.implementationSuffix": {
           "type": "string",
           "default": "Impl",
           "description": "Suffix for implementation class names (e.g., 'Impl' generates 'UserServiceImpl')"
