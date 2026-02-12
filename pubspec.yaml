@@ -3,4 +3,4 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  analyzer: ^6.4.1
+  analyzer: ^10.0.2

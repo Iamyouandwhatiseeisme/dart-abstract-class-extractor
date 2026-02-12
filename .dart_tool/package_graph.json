@@ -13,7 +13,7 @@
     },
     {
       "name": "analyzer",
-      "version": "6.4.1",
+      "version": "10.0.2",
       "dependencies": [
         "_fe_analyzer_shared",
         "collection",
@@ -111,9 +111,10 @@
     },
     {
       "name": "_fe_analyzer_shared",
-      "version": "67.0.0",
+      "version": "94.0.0",
       "dependencies": [
-        "meta"
+        "meta",
+        "source_span"
       ]
     },
     {

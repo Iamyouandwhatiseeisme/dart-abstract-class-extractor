@@ -25,12 +25,12 @@ export class DartClassParser {
     fs.writeFileSync(tmpFile, dartSource, "utf8");
 
     const extensionRoot = path.resolve(__dirname, "../");
-    const extractorPath = path.join(extensionRoot, "ast_extractor.dart");
+    const extractorPath = path.join(extensionRoot, "ast_extractor.exe");
 
     // 2. Call Dart AST extractor
     let output: string;
     try {
-      output = execSync(`dart ${extractorPath} ${tmpFile}`, {
+      output = execSync(`${extractorPath} ${tmpFile}`, {
         encoding: "utf8",
       });
     } catch (e: any) {
