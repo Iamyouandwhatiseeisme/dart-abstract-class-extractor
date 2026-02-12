@@ -2,7 +2,7 @@
   "name": "dart-abstract-class-extractor",
   "displayName": "Dart Abstract Class Extractor",
   "description": "Automatically converts Dart concrete classes into an abstract interface and a corresponding implementation class, following clean architecture principles.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "SandroAbashidze",
   "repository": {
     "type": "git",
