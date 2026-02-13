@@ -120,7 +120,7 @@ This would generate `AbstractUserRepository` and `UserRepositoryService` instead
 
 ## Release Notes
 
-### 0.4.2
+### 0.5.1
 
 Fixed a directory path issue on macOS — the extension was incorrectly resolving paths in certain directory configurations, causing failures when the workspace or binary path contained spaces or symlinks. Path resolution is now handled correctly across all standard macOS directory structures. No changes to functionality.
 

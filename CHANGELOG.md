@@ -4,7 +4,7 @@ All notable changes to **Dart Abstract Class Extractor** will be documented in t
 
 ---
 
-## [0.4.2] — 2026-02-13
+## [0.5.1] — 2026-02-13
 
 ### Fixed
 
