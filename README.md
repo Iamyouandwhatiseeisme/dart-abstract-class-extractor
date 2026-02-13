@@ -28,7 +28,6 @@ Select any Dart class, run the command, and the extension generates:
 4. Run **`Dart: Convert to Abstract Class`**
 5. The generated interface and implementation are inserted directly into your editor
 
-
 **Example — input:**
 
 ```dart
@@ -121,7 +120,11 @@ This would generate `AbstractUserRepository` and `UserRepositoryService` instead
 
 ## Release Notes
 
-### 0.4.0
+### 0.5.1
+
+Fixed a directory path issue on macOS — the extension was incorrectly resolving paths in certain directory configurations, causing failures when the workspace or binary path contained spaces or symlinks. Path resolution is now handled correctly across all standard macOS directory structures. No changes to functionality.
+
+### 0.4.1
 
 Fixed Windows compatibility — `ast_extractor.exe` previously failed on some Windows machines due to a binary architecture mismatch. The extension now bundles separate platform-specific binaries for Windows and macOS, and automatically selects the correct one at runtime. No changes to functionality.
 
