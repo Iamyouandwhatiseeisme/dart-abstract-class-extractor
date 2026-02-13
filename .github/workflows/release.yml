@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version 0.5.2'
+        description: 'Release version (e.g. 0.6.1)'
         required: true
 
 jobs:
@@ -41,6 +41,8 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -70,7 +72,7 @@ jobs:
         run: npm install -g @vscode/vsce
 
       - name: Publish to VS Code Marketplace
-        run: vsce publish minor --no-git-tag-version ${{ github.event.inputs.version }}
+        run: vsce publish --no-git-tag-version --exact-version ${{ github.event.inputs.version }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
