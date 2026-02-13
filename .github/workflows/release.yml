@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g. 0.6.1)'
+        description: 'Release version (e.g. v1.0.0)'
         required: true
 
 jobs:
@@ -71,10 +71,11 @@ jobs:
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
+      - name: Update version in package.json
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
       - name: Publish to VS Code Marketplace
-        run: vsce publish --no-git-tag-version --exact-version ${{ github.event.inputs.version }}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: vsce publish --pat ${{ secrets.VSCE_PAT }} --no-git-tag-version ${{ github.event.inputs.version }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
