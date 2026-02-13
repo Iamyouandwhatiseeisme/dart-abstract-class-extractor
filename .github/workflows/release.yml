@@ -30,7 +30,7 @@ jobs:
         run: dart pub get
 
       - name: Compile binary
-        run: dart compile exe src/bin/ast_extractor.dart -o ${{ matrix.output }}
+        run: dart compile exe bin/ast_extractor.dart -o ${{ matrix.output }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -70,7 +70,7 @@ jobs:
         run: npm install -g @vscode/vsce
 
       - name: Publish to VS Code Marketplace
-        run: vsce publish --no-git-tag-version ${{ github.event.inputs.version }}
+        run: vsce publish minor --no-git-tag-version ${{ github.event.inputs.version }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
