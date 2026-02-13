@@ -25,11 +25,10 @@ export class DartClassParser {
     fs.writeFileSync(tmpFile, dartSource, "utf8");
 
     const extensionRoot = path.resolve(__dirname, "../");
-      const platform = os.platform();
+    const platform = os.platform();
 
-      const binaryName = platform === 'win32' 
-        ? 'ast_extractor_windows.exe' 
-        : 'ast_extractor_macos';
+    const binaryName =
+      platform === "win32" ? "ast_extractor_windows.exe" : "ast_extractor.exe";
     const extractorPath = path.join(extensionRoot, binaryName);
 
     // 2. Call Dart AST extractor
