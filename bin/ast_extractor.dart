@@ -10,49 +10,37 @@ void main(List<String> args) {
     exit(1);
   }
 
-  final filePath = args[0];
-  final content = File(filePath).readAsStringSync();
-
-  final result = parseString(content: content);
-  final unit = result.unit;
-
-  final classes = <Map<String, dynamic>>[];
-
-  for (final decl in unit.declarations) {
-    if (decl is ClassDeclaration) {
-      final methods = <Map<String, dynamic>>[];
-      final fields = <Map<String, dynamic>>[];
-
-      for (final member in decl.members) {
-        if (member is MethodDeclaration) {
-          methods.add({
-            "name": member.name.lexeme,
-            "returnType": member.returnType?.toSource() ?? "dynamic",
-            "isAsync": member.body.isAsynchronous,
-            "isGetter": member.isGetter,
-            "isSetter": member.isSetter,
-            "isStatic": member.isStatic,
-            "params": member.parameters?.toSource() ?? "",
-            "body": member.body.toSource(),
-          });
-        }
-        if (member is FieldDeclaration) {
-          final type = member.fields.type?.toSource() ?? "dynamic";
-          final isFinal = member.fields.isFinal;
-
-          for (final v in member.fields.variables) {
-            fields.add({
-              "name": v.name.lexeme,
-              "type": type,
-              "isFinal": isFinal,
-            });
-          }
-        }
-      }
-
-      classes.add({"name": decl.name.lexeme, "methods": methods, "fields": fields});
-    }
-  }
+  final content = File(args[0]).readAsStringSync();
+  final unit = parseString(content: content).unit;
+  final classes = unit.declarations.whereType<ClassDeclaration>().map(parseClass).toList();
 
   print(jsonEncode(classes));
+}
+
+Map<String, dynamic> parseClass(ClassDeclaration decl) => {
+  "name": decl.name.lexeme,
+  "methods": decl.members.whereType<MethodDeclaration>().map(parseMethod).toList(),
+  "fields": decl.members.whereType<FieldDeclaration>().expand(parseField).toList(),
+};
+
+Map<String, dynamic> parseMethod(MethodDeclaration member) => {
+  "name": member.name.lexeme,
+  "returnType": member.returnType?.toSource() ?? "dynamic",
+  "isAsync": member.body.isAsynchronous,
+  "isGetter": member.isGetter,
+  "isSetter": member.isSetter,
+  "isStatic": member.isStatic,
+  "params": member.parameters?.toSource() ?? "",
+  "body": member.body.toSource(),
+};
+
+Iterable<Map<String, dynamic>> parseField(FieldDeclaration member) {
+  final type = member.fields.type?.toSource() ?? "dynamic";
+  final isFinal = member.fields.isFinal;
+
+  return member.fields.variables.map((v) => {
+    "name": v.name.lexeme,
+    "type": type,
+    "isFinal": isFinal,
+  });
 }
