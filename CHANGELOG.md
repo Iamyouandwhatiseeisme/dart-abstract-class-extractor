@@ -2,6 +2,10 @@
 
 All notable changes to **Dart Abstract Class Extractor** will be documented in this file.
 
+## [0.6.2] - 2026-02-14
+
+### Added
+- Automated CI/CD release pipeline using GitHub Actions — compiles platform-native Dart executables on Windows and macOS in parallel, bundles them into the `.vsix`, and publishes to the VS Code Marketplace and GitHub Releases in a single manual trigger.
 ---
 
 ## [0.5.1] — 2026-02-13
