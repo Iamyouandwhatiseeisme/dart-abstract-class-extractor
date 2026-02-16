@@ -33,7 +33,7 @@ jobs:
         run: dart compile exe bin/ast_extractor.dart -o ${{ matrix.output }}
 
       - name: Set binary permissions
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == macos-latest
         run: chmod +x ${{ matrix.output }}
 
       - name: Upload artifact
