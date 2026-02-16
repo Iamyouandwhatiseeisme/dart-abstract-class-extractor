@@ -1,9 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -37,7 +34,19 @@ jobs:
         if: contains(matrix.os, 'macos')
         run: chmod +x ${{ matrix.output }}
 
-      - name: Upload artifact
+      - name: Archive binary with permissions
+        if: contains(matrix.os, 'macos')
+        run: tar -czf ${{ matrix.output }}.tar.gz ${{ matrix.output }}
+
+      - name: Upload Mac artifact
+        if: contains(matrix.os, 'macos')
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}.tar.gz
+
+      - name: Upload Windows artifact
+        if: contains(matrix.os, 'windows')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.output }}
@@ -57,8 +66,8 @@ jobs:
           name: ast_extractor.exe
           path: .
 
-      - name: Make binary executable
-        run: chmod +x ast_extractor.exe
+      - name: Extract Mac binary
+        run: tar -xzf ast_extractor.exe.tar.gz
 
       - name: Setup Node
         uses: actions/setup-node@v4
