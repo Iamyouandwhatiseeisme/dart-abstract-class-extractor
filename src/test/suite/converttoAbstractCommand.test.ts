@@ -167,7 +167,7 @@ suite("convertToAbstractCommand", () => {
     });
   });
 
-  // ─── Text selection behaviour ─────────────────────────────────────────────
+  // ─── Text selection behavior ─────────────────────────────────────────────
 
   suite("text selection", () => {
     test("uses full document text when nothing is selected", async () => {
