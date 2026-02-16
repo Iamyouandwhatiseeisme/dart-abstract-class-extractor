@@ -8,6 +8,12 @@
     "type": "git",
     "url": "https://github.com/SandroAbashidze/dart-abstract-class-extractor"
   },
+  "files": [
+    "dist/**",
+    "images/**",
+    "ast_extractor.exe",
+    "ast_extractor_windows.exe"
+  ],
   "icon": "images/icon.png",
   "keywords": [
     "dart",
