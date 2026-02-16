@@ -68,7 +68,9 @@ jobs:
           path: .
 
       - name: Extract Mac binary
-        run: tar -xzf ast_extractor.exe.tar.gz
+        run: |
+          tar -xzf ast_extractor.exe.tar.gz
+          rm ast_extractor.exe.tar.gz
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -107,7 +109,10 @@ jobs:
           path: .
 
       - name: Extract Mac binary
-        run: tar -xzf ast_extractor.exe.tar.gz
+        run: |
+          tar -xzf ast_extractor.exe.tar.gz
+          rm ast_extractor.exe.tar.gz
+        
 
       - name: Setup Node
         uses: actions/setup-node@v4
