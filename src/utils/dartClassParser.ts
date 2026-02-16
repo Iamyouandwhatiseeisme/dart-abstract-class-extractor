@@ -2,6 +2,7 @@ import { execSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as self from "./dartClassParser";
 
 export interface MethodInfo {
   name: string;
@@ -22,7 +23,7 @@ export class DartClassParser {
   ) {
     // 1. Write temp dart file
     const tmpFile = path.join(os.tmpdir(), "dart_parser_input.dart");
-    fs.writeFileSync(tmpFile, dartSource, "utf8");
+    self.writeFileSync(tmpFile, dartSource, "utf8");
 
     const extensionRoot = path.resolve(__dirname, "../");
     const platform = os.platform();
@@ -34,7 +35,7 @@ export class DartClassParser {
     // 2. Call Dart AST extractor
     let output: string;
     try {
-      output = execSync(`${extractorPath} ${tmpFile}`, {
+      output = self.execSyncWrapper(`${extractorPath} ${tmpFile}`, {
         encoding: "utf8",
       });
     } catch (e: any) {
@@ -127,4 +128,15 @@ ${constructor}\n\n${implLines.join("\n\n")}
       concreteClass,
     };
   }
+}
+
+export function writeFileSync(
+  path: string,
+  data: string,
+  encoding: BufferEncoding,
+): void {
+  fs.writeFileSync(path, data, encoding);
+}
+export function execSyncWrapper(cmd: string, options: any): string {
+  return execSync(cmd, options) as string;
 }
