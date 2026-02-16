@@ -18,29 +18,29 @@ void main(List<String> args) {
 }
 
 Map<String, dynamic> parseClass(ClassDeclaration decl) => {
-  "name": decl.name.lexeme,
-  "methods": decl.members.whereType<MethodDeclaration>().map(parseMethod).toList(),
-  "fields": decl.members.whereType<FieldDeclaration>().expand(parseField).toList(),
-};
+      "name": decl.name.lexeme,
+      "methods": decl.members.whereType<MethodDeclaration>().map(parseMethod).toList(),
+      "fields": decl.members.whereType<FieldDeclaration>().expand(parseField).toList(),
+    };
 
 Map<String, dynamic> parseMethod(MethodDeclaration member) => {
-  "name": member.name.lexeme,
-  "returnType": member.returnType?.toSource() ?? "dynamic",
-  "isAsync": member.body.isAsynchronous,
-  "isGetter": member.isGetter,
-  "isSetter": member.isSetter,
-  "isStatic": member.isStatic,
-  "params": member.parameters?.toSource() ?? "",
-  "body": member.body.toSource(),
-};
+      "name": member.name.lexeme,
+      "returnType": member.returnType?.toSource() ?? "dynamic",
+      "isAsync": member.body.isAsynchronous,
+      "isGetter": member.isGetter,
+      "isSetter": member.isSetter,
+      "isStatic": member.isStatic,
+      "params": member.parameters?.toSource() ?? "",
+      "body": member.body.toSource(),
+    };
 
 Iterable<Map<String, dynamic>> parseField(FieldDeclaration member) {
   final type = member.fields.type?.toSource() ?? "dynamic";
   final isFinal = member.fields.isFinal;
 
   return member.fields.variables.map((v) => {
-    "name": v.name.lexeme,
-    "type": type,
-    "isFinal": isFinal,
-  });
+        "name": v.name.lexeme,
+        "type": type,
+        "isFinal": isFinal,
+      });
 }
