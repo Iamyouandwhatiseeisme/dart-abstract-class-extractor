@@ -10,6 +10,11 @@ All notable changes to **Dart Abstract Class Extractor** will be documented in t
 - Unit tests for `DartAbstractClassProvider` covering guard clauses, action shape, and class keyword detection
 - Unit tests for `DartClassParser` covering guard clauses, filesystem interaction, naming, fields, and methods
 - CI workflow that builds Dart binaries and runs the full test suite on every pull request to `main`
+- Release workflow now runs tests before publishing, preventing broken builds from reaching the marketplace
+
+### Changed
+
+- Dart AST extractor binaries are no longer committed to the repository and are now built fresh by the CI/release pipeline
 
 ## [0.6.2] - 2026-02-14
 
