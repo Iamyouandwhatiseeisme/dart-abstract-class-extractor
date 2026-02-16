@@ -12,3 +12,5 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+!ast_extractor.exe
+!ast_extractor_windows.exe
