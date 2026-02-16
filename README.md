@@ -2,22 +2,6 @@
 
 A VS Code extension that automatically converts Dart concrete classes into an abstract interface and a corresponding implementation class — helping you write cleaner, more maintainable Flutter and Dart code following clean architecture principles.
 
-## Development
-
-### Running Tests
-
-```bash
-npm run compile
-npm test
-```
-
-### CI
-
-All pull requests to `main` must pass the test suite before merging. The CI pipeline:
-
-1. Compiles the Dart AST extractor binary on Windows and macOS
-2. Runs the full TypeScript test suite against the compiled binary
-
 ## Features
 
 ### Convert Any Dart Class in Seconds
@@ -155,3 +139,19 @@ Major update — migrated parsing from TypeScript + regex to the Dart Analyzer A
 ### 0.1.0
 
 Initial release — convert concrete Dart classes to an abstract interface and implementation, preserving method bodies, supporting block-body and arrow-function methods, and automatically excluding private members.
+
+## Development
+
+### Running Tests
+
+```bash
+npm run compile
+npm test
+```
+
+### CI
+
+All pull requests to `main` must pass the test suite before merging. The CI pipeline:
+
+1. Compiles the Dart AST extractor binary on Windows and macOS
+2. Runs the full TypeScript test suite against the compiled binary
