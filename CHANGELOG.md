@@ -2,10 +2,21 @@
 
 All notable changes to **Dart Abstract Class Extractor** will be documented in this file.
 
+## [0.6.3] - 2026-02-16
+
+### Added
+
+- Unit tests for `convertToAbstractCommand` covering guard clauses, text selection, configuration, and all quick pick actions
+- Unit tests for `DartAbstractClassProvider` covering guard clauses, action shape, and class keyword detection
+- Unit tests for `DartClassParser` covering guard clauses, filesystem interaction, naming, fields, and methods
+- CI workflow that builds Dart binaries and runs the full test suite on every pull request to `main`
+
 ## [0.6.2] - 2026-02-14
 
 ### Added
+
 - Automated CI/CD release pipeline using GitHub Actions — compiles platform-native Dart executables on Windows and macOS in parallel, bundles them into the `.vsix`, and publishes to the VS Code Marketplace and GitHub Releases in a single manual trigger.
+
 ---
 
 ## [0.5.1] — 2026-02-13
