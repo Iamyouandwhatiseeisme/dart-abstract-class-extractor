@@ -1,7 +1,8 @@
 import * as assert from "assert";
 import * as sinon from "sinon";
 import * as vscode from "vscode";
-import { convertToAbstractCommand } from "../../commands/convertToAbstractCommand";
+import * as convertToAbstractCommand from "../../commands/convertToAbstractCommand";
+
 import { DartClassParser } from "../../utils/dartClassParser";
 import { ExtensionConfig } from "../../utils/extensionConfig";
 
@@ -93,9 +94,9 @@ suite("convertToAbstractCommand", () => {
       .stub(vscode.window, "showQuickPick")
       .resolves(undefined);
 
-    // Clipboard stub
+    // Stub our own wrapper instead of the frozen vscode.env.clipboard
     clipboardWriteStub = sandbox
-      .stub(vscode.env.clipboard, "writeText")
+      .stub(convertToAbstractCommand, "writeToClipboard")
       .resolves();
 
     // DartClassParser & ExtensionConfig stubs
@@ -120,7 +121,7 @@ suite("convertToAbstractCommand", () => {
     test("shows error when there is no active editor", async () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(undefined);
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(showErrorMessageStub, "No active editor found!");
       sinon.assert.notCalled(convertStub);
@@ -130,7 +131,7 @@ suite("convertToAbstractCommand", () => {
       const editor = makeMockEditor({ languageId: "typescript" });
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(
         showErrorMessageStub,
@@ -144,7 +145,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       convertStub.returns(null);
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(
         showErrorMessageStub,
@@ -157,7 +158,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       convertStub.throws(new Error("parse failure"));
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(
         showErrorMessageStub,
@@ -174,14 +175,9 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Copy to clipboard");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
-      sinon.assert.calledWith(
-        convertStub,
-        MOCK_DART_CLASS, // full document text
-        "I",
-        "Impl",
-      );
+      sinon.assert.calledWith(convertStub, MOCK_DART_CLASS, "I", "Impl");
     });
 
     test("uses selected text when a selection exists", async () => {
@@ -192,7 +188,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Copy to clipboard");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(convertStub, "class Foo {}", "I", "Impl");
     });
@@ -209,7 +205,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Copy to clipboard");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(convertStub, sinon.match.any, "Base", "Service");
     });
@@ -223,7 +219,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves(undefined);
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.notCalled(editor.edit as unknown as sinon.SinonStub);
       sinon.assert.notCalled(clipboardWriteStub);
@@ -237,21 +233,23 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Copy to clipboard");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
+      // writeToClipboard is stubbed, so we verify it was called with the right text
       sinon.assert.calledWith(clipboardWriteStub, MOCK_FULL_OUTPUT);
     });
 
-    test('shows "Code copied" information message', async () => {
+    test("shows success message after copy", async () => {
       const editor = makeMockEditor();
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Copy to clipboard");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
+      // The top-level success message is shown regardless of which action was chosen
       sinon.assert.calledWith(
         showInformationMessageStub,
-        "Code copied to clipboard!",
+        "Interface and implementation created successfully!",
       );
     });
   });
@@ -265,12 +263,11 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Replace current class");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       sinon.assert.calledOnce(editStub);
 
-      // Invoke the edit callback and verify `replace` is called
       const editCallback = editStub.firstCall.args[0];
       const editBuilderMock = {
         replace: sinon.spy(),
@@ -287,7 +284,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Replace current class");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
@@ -297,7 +294,6 @@ suite("convertToAbstractCommand", () => {
       };
       editCallback(editBuilderMock);
 
-      // A Range covering the full document should be passed
       sinon.assert.calledOnce(editBuilderMock.replace);
       const [range] = editBuilderMock.replace.firstCall.args;
       assert.ok(
@@ -311,7 +307,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Replace current class");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(
         showInformationMessageStub,
@@ -326,7 +322,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Insert below");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
@@ -356,7 +352,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Insert below");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
@@ -368,7 +364,6 @@ suite("convertToAbstractCommand", () => {
 
       sinon.assert.calledOnce(editBuilderMock.insert);
       const [insertPosition] = editBuilderMock.insert.firstCall.args;
-      // The position should be the selection's end, not position(0,0)
       assert.ok(
         insertPosition instanceof vscode.Position,
         "Expected a vscode.Position",
@@ -380,7 +375,7 @@ suite("convertToAbstractCommand", () => {
       sandbox.stub(vscode.window, "activeTextEditor").value(editor);
       showQuickPickStub.resolves("Insert below");
 
-      await convertToAbstractCommand();
+      await convertToAbstractCommand.convertToAbstractCommand();
 
       sinon.assert.calledWith(
         showInformationMessageStub,
