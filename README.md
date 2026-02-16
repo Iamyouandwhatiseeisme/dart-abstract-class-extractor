@@ -2,7 +2,7 @@
 
 A VS Code extension that automatically converts Dart concrete classes into an abstract interface and a corresponding implementation class — helping you write cleaner, more maintainable Flutter and Dart code following clean architecture principles.
 
-![Demo](images/extract.gif)
+![Demo](https://raw.githubusercontent.com/your-username/your-repo/main/images/extract.gif)
 
 
 ## Features
