@@ -3,3 +3,6 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+
+ast_extractor.exe
+ast_extractor_windows.exe
