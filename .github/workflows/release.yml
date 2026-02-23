@@ -112,7 +112,6 @@ jobs:
         run: |
           tar -xzf ast_extractor.exe.tar.gz
           rm ast_extractor.exe.tar.gz
-        
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -132,6 +131,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}
           git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
           git push
