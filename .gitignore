@@ -6,3 +6,4 @@ node_modules
 
 ast_extractor.exe
 ast_extractor_windows.exe
+src/test/test.dart
