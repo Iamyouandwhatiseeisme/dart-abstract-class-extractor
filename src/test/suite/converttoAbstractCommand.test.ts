@@ -9,9 +9,9 @@ import { ExtensionConfig } from "../../utils/extensionConfig";
 suite("convertToAbstractCommand", () => {
   let sandbox: sinon.SinonSandbox;
 
-  // Reusable stubs
   let showErrorMessageStub: sinon.SinonStub;
   let showInformationMessageStub: sinon.SinonStub;
+  let showWarningMessageStub: sinon.SinonStub;
   let showQuickPickStub: sinon.SinonStub;
   let clipboardWriteStub: sinon.SinonStub;
   let convertStub: sinon.SinonStub;
@@ -36,14 +36,19 @@ suite("convertToAbstractCommand", () => {
   @override void fetchUser() {}
   @override void saveUser() {}
 }`,
+    warnings: [],
+  };
+
+  const MOCK_RESULT_WITH_WARNINGS = {
+    ...MOCK_RESULT,
+    warnings: [
+      `Class "UserRepository" contains private fields (_id) which will be omitted from the interface.`,
+      `Class "UserRepository" contains setters which are not supported and will be omitted.`,
+    ],
   };
 
   const MOCK_FULL_OUTPUT = `${MOCK_RESULT.interfaceClass}\n\n${MOCK_RESULT.concreteClass}`;
 
-  /**
-   * Creates a mock VS Code TextEditor with sensible defaults.
-   * Override any field by passing a partial object.
-   */
   function makeMockEditor(
     overrides: {
       languageId?: string;
@@ -83,23 +88,23 @@ suite("convertToAbstractCommand", () => {
   setup(() => {
     sandbox = sinon.createSandbox();
 
-    // VS Code window stubs
     showErrorMessageStub = sandbox
       .stub(vscode.window, "showErrorMessage")
       .resolves(undefined);
     showInformationMessageStub = sandbox
       .stub(vscode.window, "showInformationMessage")
       .resolves(undefined);
+    showWarningMessageStub = sandbox
+      .stub(vscode.window, "showWarningMessage")
+      .resolves(undefined);
     showQuickPickStub = sandbox
       .stub(vscode.window, "showQuickPick")
       .resolves(undefined);
 
-    // Stub our own wrapper instead of the frozen vscode.env.clipboard
     clipboardWriteStub = sandbox
       .stub(convertToAbstractCommand, "writeToClipboard")
       .resolves();
 
-    // DartClassParser & ExtensionConfig stubs
     convertStub = sandbox
       .stub(DartClassParser, "convertToAbstractClass")
       .returns(MOCK_RESULT);
@@ -167,7 +172,50 @@ suite("convertToAbstractCommand", () => {
     });
   });
 
-  // ─── Text selection behavior ─────────────────────────────────────────────
+  // ─── Warnings ─────────────────────────────────────────────────────────────
+
+  suite("warnings", () => {
+    test("does not show warning message when there are no warnings", async () => {
+      const editor = makeMockEditor();
+      sandbox.stub(vscode.window, "activeTextEditor").value(editor);
+      showQuickPickStub.resolves("Copy to clipboard");
+
+      await convertToAbstractCommand.convertToAbstractCommand();
+
+      sinon.assert.notCalled(showWarningMessageStub);
+    });
+
+    test("shows warning message when result contains warnings", async () => {
+      const editor = makeMockEditor();
+      sandbox.stub(vscode.window, "activeTextEditor").value(editor);
+      convertStub.returns(MOCK_RESULT_WITH_WARNINGS);
+      showQuickPickStub.resolves("Copy to clipboard");
+
+      await convertToAbstractCommand.convertToAbstractCommand();
+
+      sinon.assert.calledWith(
+        showWarningMessageStub,
+        MOCK_RESULT_WITH_WARNINGS.warnings.join("\n"),
+      );
+    });
+
+    test("still completes generation successfully when warnings are present", async () => {
+      const editor = makeMockEditor();
+      sandbox.stub(vscode.window, "activeTextEditor").value(editor);
+      convertStub.returns(MOCK_RESULT_WITH_WARNINGS);
+      showQuickPickStub.resolves("Copy to clipboard");
+
+      await convertToAbstractCommand.convertToAbstractCommand();
+
+      sinon.assert.calledWith(clipboardWriteStub, MOCK_FULL_OUTPUT);
+      sinon.assert.calledWith(
+        showInformationMessageStub,
+        "Interface and implementation created successfully!",
+      );
+    });
+  });
+
+  // ─── Text selection behavior ──────────────────────────────────────────────
 
   suite("text selection", () => {
     test("uses full document text when nothing is selected", async () => {
@@ -235,7 +283,6 @@ suite("convertToAbstractCommand", () => {
 
       await convertToAbstractCommand.convertToAbstractCommand();
 
-      // writeToClipboard is stubbed, so we verify it was called with the right text
       sinon.assert.calledWith(clipboardWriteStub, MOCK_FULL_OUTPUT);
     });
 
@@ -246,7 +293,6 @@ suite("convertToAbstractCommand", () => {
 
       await convertToAbstractCommand.convertToAbstractCommand();
 
-      // The top-level success message is shown regardless of which action was chosen
       sinon.assert.calledWith(
         showInformationMessageStub,
         "Interface and implementation created successfully!",
@@ -269,10 +315,7 @@ suite("convertToAbstractCommand", () => {
       sinon.assert.calledOnce(editStub);
 
       const editCallback = editStub.firstCall.args[0];
-      const editBuilderMock = {
-        replace: sinon.spy(),
-        insert: sinon.spy(),
-      };
+      const editBuilderMock = { replace: sinon.spy(), insert: sinon.spy() };
       editCallback(editBuilderMock);
 
       sinon.assert.calledOnce(editBuilderMock.replace);
@@ -288,18 +331,12 @@ suite("convertToAbstractCommand", () => {
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
-      const editBuilderMock = {
-        replace: sinon.spy(),
-        insert: sinon.spy(),
-      };
+      const editBuilderMock = { replace: sinon.spy(), insert: sinon.spy() };
       editCallback(editBuilderMock);
 
       sinon.assert.calledOnce(editBuilderMock.replace);
       const [range] = editBuilderMock.replace.firstCall.args;
-      assert.ok(
-        range instanceof vscode.Range,
-        "Expected a vscode.Range for full-document replacement",
-      );
+      assert.ok(range instanceof vscode.Range);
     });
 
     test("shows success message after replace", async () => {
@@ -326,22 +363,13 @@ suite("convertToAbstractCommand", () => {
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
-      const editBuilderMock = {
-        replace: sinon.spy(),
-        insert: sinon.spy(),
-      };
+      const editBuilderMock = { replace: sinon.spy(), insert: sinon.spy() };
       editCallback(editBuilderMock);
 
       sinon.assert.calledOnce(editBuilderMock.insert);
       const [, insertedText] = editBuilderMock.insert.firstCall.args;
-      assert.ok(
-        insertedText.startsWith("\n\n"),
-        "Inserted text should be preceded by two newlines",
-      );
-      assert.ok(
-        insertedText.includes(MOCK_RESULT.interfaceClass),
-        "Inserted text should contain the interface class",
-      );
+      assert.ok(insertedText.startsWith("\n\n"));
+      assert.ok(insertedText.includes(MOCK_RESULT.interfaceClass));
     });
 
     test("inserts after the selection end when text is selected", async () => {
@@ -356,18 +384,12 @@ suite("convertToAbstractCommand", () => {
 
       const editStub = editor.edit as unknown as sinon.SinonStub;
       const editCallback = editStub.firstCall.args[0];
-      const editBuilderMock = {
-        replace: sinon.spy(),
-        insert: sinon.spy(),
-      };
+      const editBuilderMock = { replace: sinon.spy(), insert: sinon.spy() };
       editCallback(editBuilderMock);
 
       sinon.assert.calledOnce(editBuilderMock.insert);
       const [insertPosition] = editBuilderMock.insert.firstCall.args;
-      assert.ok(
-        insertPosition instanceof vscode.Position,
-        "Expected a vscode.Position",
-      );
+      assert.ok(insertPosition instanceof vscode.Position);
     });
 
     test("shows success message after insert", async () => {
