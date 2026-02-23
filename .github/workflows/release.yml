@@ -128,6 +128,14 @@ jobs:
       - name: Update version in package.json
         run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
 
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+          git push
+
       - name: Publish to VS Code Marketplace
         run: vsce publish --pat ${{ secrets.VSCE_PAT }} --no-git-tag-version ${{ github.event.inputs.version }}
 
