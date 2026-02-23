@@ -4,7 +4,6 @@ A VS Code extension that automatically converts Dart concrete classes into an ab
 
 ![Demo](https://raw.githubusercontent.com/Iamyouandwhatiseeisme/dart-abstract-class-extractor/main/images/extract.gif)
 
-
 ## Features
 
 ### Convert Any Dart Class in Seconds
@@ -87,6 +86,7 @@ class UserRepositoryImpl implements IUserRepository {
 - ✅ `@override` annotations added automatically
 - ✅ Constructor generated from properties
 - ✅ Private members (`_`) are correctly excluded from the interface
+- ⚠️ Classes with private fields or setters show a warning — unsupported members are omitted from the output
 
 ## Requirements
 
@@ -120,8 +120,13 @@ This would generate `AbstractUserRepository` and `UserRepositoryService` instead
 ## Known Issues
 
 - Mixins and `extends` relationships are not carried over to the generated classes — the output focuses on the interface contract only
+- Classes that rely heavily on private mutable state (private fields + setters) will generate a warning and those members will be omitted — consider refactoring to use public `final` fields before extracting
 
 ## Release Notes
+
+### 0.6.10
+
+Improved handling of unsupported class members — private fields and setters are now correctly excluded from both the abstract interface and the implementation class. A warning is displayed when the extension detects these members so you know what was omitted.
 
 ### 0.5.1
 
