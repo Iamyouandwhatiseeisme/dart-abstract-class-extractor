@@ -14,3 +14,4 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 !ast_extractor.exe
 !ast_extractor_windows.exe
+/src/test/test.dart

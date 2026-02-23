@@ -41,6 +41,9 @@ export async function convertToAbstractCommand(): Promise<void> {
       vscode.window.showErrorMessage("No valid Dart class found!");
       return;
     }
+    if (result.warnings?.length) {
+      vscode.window.showWarningMessage(result.warnings.join("\n"));
+    }
 
     const { interfaceClass, concreteClass } = result;
     const fullOutput = `${interfaceClass}\n\n${concreteClass}`;

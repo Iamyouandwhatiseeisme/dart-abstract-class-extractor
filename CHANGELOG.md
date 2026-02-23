@@ -2,6 +2,17 @@
 
 All notable changes to **Dart Abstract Class Extractor** will be documented in this file.
 
+# [0.6.10] - 2026-02-23
+
+### Added
+
+- Warnings are now shown when a class contains private fields or setters that will be omitted from the generated interface
+
+### Fixed
+
+- Private fields (prefixed with `_`) are now correctly excluded from both the abstract interface and the implementation class
+- Private fields no longer appear in the generated constructor parameters
+
 ## [0.6.3] - 2026-02-16
 
 ### Added
